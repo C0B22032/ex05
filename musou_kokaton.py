@@ -152,14 +152,23 @@ class Bomb(pg.sprite.Sprite):
         self.rect.centery = emy.rect.centery+emy.rect.height/2
         self.speed = 6
 
-    def update(self):
+    def update(self, score):
         """
         爆弾を速度ベクトルself.vx, self.vyに基づき移動させる
         引数 screen：画面Surface
         """
         self.rect.move_ip(+self.speed*self.vx, +self.speed*self.vy)
-        if check_bound(self.rect) != (True, True):
-            self.kill()
+        yoko, tate = check_bound(self.rect)
+        if (yoko, tate) != (True, True):
+            if (score < 100):    # スコアが100以下の時、壁に当たると消える
+                self.kill()
+            if (score >= 100):   # スコアが100以上の時、壁で跳ね返る
+                if not yoko:
+                    self.vx *= -1
+                if not tate:
+                    self.vy *= -1
+            if (score >= 200):   # スコアが200以上の時、速さが1.15倍される
+                self.speed *= 1.15
 
 
 class Beam(pg.sprite.Sprite):
@@ -426,12 +435,12 @@ def main():
     boss_bomb = pg.sprite.Group()
     tmr = 0
     clock = pg.time.Clock()
-    e_kill = pg.mixer.Sound("ex04/bgm/explosion.wav")  # 爆発SE
-    b_beam = pg.mixer.Sound("ex04/bgm/beam.wav")  #ビームSE
-    b_damame = pg.mixer.Sound("ex04/bgm/damage.wav")  # ダメージSE
-    gravity_bgm = pg.mixer.Sound("ex04/bgm/gravity.wav")  # 重力球SE
+    e_kill = pg.mixer.Sound("ex05/bgm/explosion.wav")  # 爆発SE
+    b_beam = pg.mixer.Sound("ex05/bgm/beam.wav")  #ビームSE
+    b_damame = pg.mixer.Sound("ex05/bgm/damage.wav")  # ダメージSE
+    gravity_bgm = pg.mixer.Sound("ex05/bgm/gravity.wav")  # 重力球SE
     pg.mixer.music.set_volume(0.3)  # 音量
-    pg.mixer.music.load("ex04/bgm/bgm.wav")  # 背景bgmを読み込み
+    pg.mixer.music.load("ex05/bgm/bgm.wav")  # 背景bgmを読み込み
     pg.mixer.music.play(-1)  # 背景bgmを無限ループで再生
 
     while True:
@@ -546,7 +555,7 @@ def main():
         emys.draw(screen)
         boss_mv.update()
         boss_mv.draw(screen)
-        bombs.update()
+        bombs.update(score=score.score)
         bombs.draw(screen)
         boss_bomb.update()
         boss_bomb.draw(screen)
