@@ -276,10 +276,10 @@ class Boss(pg.sprite.Sprite):
         super().__init__()
         self.flag=0#場に一体だけ出現させるためのフラグ
         self.boss_hp=50#ボスのＨＰ
-        self.rect = self.hp_bar.get_rect()
+        self.rect = self.img.get_rect()
         self.rect.center = WIDTH/2, 20
         self.image =__class__.img
-        self.rect = self.image.get_rect()
+        
         self.rect.center = WIDTH/2, 0
         self.vy = +6
         self.bound = 200 # 停止位置(固定)
@@ -535,6 +535,7 @@ def main():
                 bird.change_img(6, screen)  # こうかとん喜びエフェクト
                 score.update(screen)
                 pg.display.update()
+
                 time.sleep(2)
                 return
 
@@ -545,7 +546,7 @@ def main():
         beams.draw(screen)
         emys.update()
         emys.draw(screen)
-        boss_mv.update(screen)
+        boss_mv.update()
         boss_mv.draw(screen)
         bombs.update()
         bombs.draw(screen)
