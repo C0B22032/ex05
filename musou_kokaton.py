@@ -660,9 +660,7 @@ def main():
         else:   # ボスの爆弾と当たっていないなら
             for boss_bombs in pg.sprite.spritecollide(bird, boss_bomb, False):
                 if (bird.state == "hyper"): # hyperモードの時
-                    exps.add(Explosion(boss_bombs, 50))   # 爆発エフェクト
-                                                    # 加点はなし
-                    e_kill.play()  # 爆発SEの呼び出し
+                    pass
                 elif life.life >= 2:  # normalモードかつ残機が2以上の時
                     boss_bomb_tf = True
                     now_time = tmr # 今の時間を保存
