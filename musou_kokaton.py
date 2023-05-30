@@ -8,6 +8,20 @@ import pygame as pg
 WIDTH = 1600  # ゲームウィンドウの幅
 HEIGHT = 900  # ゲームウィンドウの高さ
 
+# Pygameの初期化と画面設定
+pg.init()
+screen = pg.display.set_mode((WIDTH, HEIGHT))
+
+# 背景画像（朝・夕・夜）の読込みと拡大
+bg_img_morning = pg.transform.scale(pg.image.load("ex05/bg/bg_pattern2_aozora.png").convert(), (WIDTH, HEIGHT))
+bg_img_evening = pg.transform.scale(pg.image.load("ex05/bg/bg_pattern3_yuyake.png").convert(), (WIDTH, HEIGHT))
+bg_img_night = pg.transform.scale(pg.image.load("ex05/bg/bg_pattern4_yoru.png").convert(), (WIDTH, HEIGHT))
+
+# 背景画像をリストに格納
+bg_imgs_lst = [bg_img_morning, bg_img_evening, bg_img_night]
+
+# 表示する背景画像の番号（0:朝 1:夕 2:夜）
+bg_img_i = 0
 b_beam = None  # ビームのSE変数
 e_kill = None  # 爆発のSE変数
 b_damame = None  # 攻撃を受けた時のSE変数
@@ -457,6 +471,49 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class Timer:
+    """
+    プログラム開始からの経過時間を計算するクラス
+    """
+    def __init__(self):
+        self.start_time = time.time()
+
+    # 経過時間を計算
+    def get_elapsed_time(self):
+        return time.time() - self.start_time
+
+
+def change_background(screen: pg.Surface, timer: Timer):
+    """
+    表示する背景画像の番号を変更する関数
+    """
+    global bg_img_i
+    
+    # 現在の時刻を取得する
+    elapsed_time = timer.get_elapsed_time()
+    
+    # 30で割った商をグループ数とする
+    group_count = int(elapsed_time) // 30
+    
+    # グループ数を3で割った余りを求める
+    group_remainder = group_count % 3
+
+    # 余りが0なら
+    if group_remainder == 0:
+        # 朝の画像を表示
+        bg_img_i = 0
+    
+    # 余りが1なら
+    elif group_remainder == 1:
+        # 昼の画像を表示
+        bg_img_i = 1
+    
+    # 余りが2なら
+    else:
+        # 夜の画像を表示
+        bg_img_i = 2
+
+
 def main():
     pg.display.set_caption("真！こうかとん無双・改")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -475,6 +532,9 @@ def main():
     boss_bomb = pg.sprite.Group()
     tmr = 0
     clock = pg.time.Clock()
+    
+    # プログラム開始からの経過時間を初期化する
+    timer = Timer()
     e_kill = pg.mixer.Sound("ex05/bgm/explosion.wav")  # 爆発SE
     b_beam = pg.mixer.Sound("ex05/bgm/beam.wav")  #ビームSE
     b_damame = pg.mixer.Sound("ex05/bgm/damage.wav")  # ダメージSE
@@ -518,6 +578,22 @@ def main():
                 beam_lst = nb.gen_beams()
                 beams.add(beam_lst)
         screen.blit(bg_img, [0, 0])
+        
+        # 背景画像を表示する
+        screen.blit(bg_imgs_lst[bg_img_i], (0, 0))
+        
+        # 現在の経過時間を更新する
+        elapsed_time = timer.get_elapsed_time()
+        
+        # 背景画像を時刻に基づき変更する
+        change_background(screen, timer)
+        
+        # 経過時間を画面上に表示する
+        elapsed_minutes = int(elapsed_time // 60)  # 分を計算
+        elapsed_seconds = int(elapsed_time % 60)  # 秒を計算
+        time_text = f"{elapsed_minutes:02d}:{elapsed_seconds:02d}"  # 表示する時刻
+        time_image = score.font.render(time_text, 0, score.color)  # 画像に変換
+        screen.blit(time_image, (32, 100))  # 時刻を画面に表示
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
