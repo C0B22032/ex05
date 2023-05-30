@@ -391,6 +391,44 @@ class Gravity(pg.sprite.Sprite):
                 sum_mv[0] += mv[0]
                 sum_mv[1] += mv[1]  
         screen.blit(self.image, self.rect)
+    
+class Life:
+    """
+    こうかとんの残機を表示するクラス
+    """
+    def __init__(self):
+        self.font = pg.font.Font(None, 50)  
+        self.color = (255,255, 0) 
+        self.life = 3  # 初期の残機
+        self.image = self.font.render(f"LIFE: {self.life}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 90, HEIGHT-100
+
+    def life_up(self):  # 残機が1増える 
+        self.life += 1
+    def life_down(self):    # 残機が1減る
+        self.life -= 1
+    
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"LIFE: {self.life}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class Gameover:
+    """
+    gameoverの表示
+    """
+    def __init__(self):
+        self.font = pg.font.Font(None, 100)
+        self.color = (255, 0, 0)
+        self.image = self.font.render("GAME OVER", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = WIDTH/2, HEIGHT/2
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render("GAME OVER",0, self.color)
+        screen.blit(self.image, self.rect)
+
 
 
 class Score:
@@ -424,6 +462,8 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("ex04/fig/pg_bg.jpg")
     score = Score()
+    life = Life()
+    gameover = Gameover()
     boss=Boss()
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
@@ -439,10 +479,12 @@ def main():
     b_beam = pg.mixer.Sound("ex05/bgm/beam.wav")  #ビームSE
     b_damame = pg.mixer.Sound("ex05/bgm/damage.wav")  # ダメージSE
     gravity_bgm = pg.mixer.Sound("ex05/bgm/gravity.wav")  # 重力球SE
+    zankiup = [n * 300 for n in range(1, 999)]  # 残機が増えるか比較するためのリスト
     pg.mixer.music.set_volume(0.3)  # 音量
     pg.mixer.music.load("ex05/bgm/bgm.wav")  # 背景bgmを読み込み
     pg.mixer.music.play(-1)  # 背景bgmを無限ループで再生
-
+    boss_bomb_tf = False # ***boss_bombのfor文付近を参照***
+    now_time = 0
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
@@ -509,33 +551,59 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             e_kill.play()  # 爆発SEの呼び出し
 
+        for i in zankiup:  
+            if score.score >= i:  # スコアが300の倍数を超える
+                life.life_up()  # 残機が1増える
+                life.update(screen)
+                zankiup.remove(i)  
+
         for bomb in pg.sprite.spritecollide(bird, bombs, True):
             if (bird.state == "hyper"): # hyperモードの時
                 exps.add(Explosion(bomb, 50))  # 爆発エフェクト
                 score.score_up(1)  # 1点アップ
                 e_kill.play()  # 爆発SEの呼び出し
+            elif life.life >= 2:  # normalモードかつ残機が2以上の時
+                life.life_down()  # 残機が1減る
+                bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                score.update(screen)  
             else:   # normalモードの時
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 pg.mixer.music.stop()  # 背景bgmを止める
                 b_damame.play()  # ダメージSEの呼び出し
+                life.life_down()  # 残機が1減る
                 score.update(screen)
+                life.update(screen)
+                gameover.update(screen)
                 pg.display.update()
-                time.sleep(2)
+                time.sleep(3)
                 return
-            
-        for boss_bomb in pg.sprite.spritecollide(bird, boss_bomb, True):
-            if (bird.state == "hyper"): # hyperモードの時
-                exps.add(Explosion(bomb, 50))   # 爆発エフェクト
-                                                # 加点はなし
-                e_kill.play()  # 爆発SEの呼び出し
-            else:   # normalモードの時
-                bird.change_img(8, screen) # こうかとん悲しみエフェクト
-                pg.mixer.music.stop()  # 背景bgmを止める
-                b_damame.play()  # ダメージSEの呼び出し
-                score.update(screen)
-                pg.display.update()
-                time.sleep(2)
-                return
+        diff_time = tmr - now_time # 「今の時間 - ボスの爆弾と当たった時間」
+        if boss_bomb_tf: # ボスの爆弾と当たっている最中なら無敵時間を継続
+            if (diff_time > 100): # 100フレームより時間が経っていれば、無敵時間の解除
+                boss_bomb_tf = False
+        else:   # ボスの爆弾と当たっていないなら
+            for boss_bombs in pg.sprite.spritecollide(bird, boss_bomb, False):
+                if (bird.state == "hyper"): # hyperモードの時
+                    exps.add(Explosion(boss_bombs, 50))   # 爆発エフェクト
+                                                    # 加点はなし
+                    e_kill.play()  # 爆発SEの呼び出し
+                elif life.life >= 2:  # normalモードかつ残機が2以上の時
+                    boss_bomb_tf = True
+                    now_time = tmr # 今の時間を保存
+                    life.life_down()  # 残機が1減る
+                    bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                    score.update(screen)  
+                else:   # normalモードの時
+                    bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                    pg.mixer.music.stop()  # 背景bgmを止める
+                    b_damame.play()  # ダメージSEの呼び出し
+                    life.life_down()  # 残機が1減る
+                    score.update(screen)
+                    life.update(screen)
+                    gameover.update(screen)
+                    pg.display.update()
+                    time.sleep(3)
+                    return
 
         if boss.boss_hp<=0:#ボスのＨＰが尽きたら喜びエフェクトを取り終了する
                 score.score_up(1000)
@@ -562,6 +630,7 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
+        life.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
