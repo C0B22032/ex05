@@ -8,6 +8,11 @@ import pygame as pg
 WIDTH = 1600  # ゲームウィンドウの幅
 HEIGHT = 900  # ゲームウィンドウの高さ
 
+b_beam = None  # ビームのSE変数
+e_kill = None  # 爆発のSE変数
+b_damame = None  # 攻撃を受けた時のSE変数
+gravity_bgm = None  # 重力球を発動した時のSE変数
+
 def check_bound(obj: pg.Rect) -> tuple[bool, bool]:
     """
     オブジェクトが画面内か画面外かを判定し，真理値タプルを返す
@@ -430,6 +435,13 @@ def main():
     boss_bomb = pg.sprite.Group()
     tmr = 0
     clock = pg.time.Clock()
+    e_kill = pg.mixer.Sound("ex04/bgm/explosion.wav")  # 爆発SE
+    b_beam = pg.mixer.Sound("ex04/bgm/beam.wav")  #ビームSE
+    b_damame = pg.mixer.Sound("ex04/bgm/damage.wav")  # ダメージSE
+    gravity_bgm = pg.mixer.Sound("ex04/bgm/gravity.wav")  # 重力球SE
+    pg.mixer.music.set_volume(0.3)  # 音量
+    pg.mixer.music.load("ex04/bgm/bgm.wav")  # 背景bgmを読み込み
+    pg.mixer.music.play(-1)  # 背景bgmを無限ループで再生
 
     while True:
         key_lst = pg.key.get_pressed()
@@ -438,6 +450,7 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+                b_beam.play()  # ビームSEの呼び出し
             if (tmr+1)%1000==0:#ボスは1000ｆ後に出現
                 if boss.flag ==0:#複数体出現するのを阻止
                     boss_mv.add(Boss())
@@ -453,6 +466,7 @@ def main():
                 if score.score>=50:#スコアが５０未満の時は発動しない
                     gravity.add(Gravity(bird,500))#重力球の展開
                     score.score_down(50)#50点消費する
+                    gravity_bgm.play()  # 重力球SEの呼び出し
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
                 bird.speed = 20
             else:
@@ -478,6 +492,7 @@ def main():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.score_up(10)  # 10点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
+            e_kill.play()  # 爆発SEの呼び出し
         for bos in pg.sprite.groupcollide(boss_mv, beams, False, True).keys():
             exps.add(Explosion(bos, 100))  # 爆発エフェクト
             score.score_up(5)  # 5点アップ
@@ -485,18 +500,24 @@ def main():
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
+            e_kill.play()  # 爆発SEの呼び出し
         for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():#重力球と爆弾の接触
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
+            e_kill.play()  # 爆発SEの呼び出し
         for bomb in pg.sprite.groupcollide(boss_bomb, gravity, True, False).keys():#重力球とボスの爆弾の接触
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            e_kill.play()  # 爆発SEの呼び出し
 
         for bomb in pg.sprite.spritecollide(bird, bombs, True):
             if (bird.state == "hyper"): # hyperモードの時
                 exps.add(Explosion(bomb, 50))  # 爆発エフェクト
                 score.score_up(1)  # 1点アップ
+                e_kill.play()  # 爆発SEの呼び出し
             else:   # normalモードの時
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                pg.mixer.music.stop()  # 背景bgmを止める
+                b_damame.play()  # ダメージSEの呼び出し
                 score.update(screen)
                 pg.display.update()
                 time.sleep(2)
@@ -506,8 +527,11 @@ def main():
             if (bird.state == "hyper"): # hyperモードの時
                 exps.add(Explosion(bomb, 50))   # 爆発エフェクト
                                                 # 加点はなし
+                e_kill.play()  # 爆発SEの呼び出し
             else:   # normalモードの時
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                pg.mixer.music.stop()  # 背景bgmを止める
+                b_damame.play()  # ダメージSEの呼び出し
                 score.update(screen)
                 pg.display.update()
                 time.sleep(2)
@@ -516,6 +540,7 @@ def main():
         if boss.boss_hp<=0:#ボスのＨＰが尽きたら喜びエフェクトを取り終了する
                 score.score_up(1000)
                 bird.change_img(6, screen)  # こうかとん喜びエフェクト
+                pg.mixer.music.stop()  # 背景bgmを止める
                 score.update(screen)
                 pg.display.update()
                 time.sleep(2)
