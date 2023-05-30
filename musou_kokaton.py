@@ -5,10 +5,8 @@ import time
 
 import pygame as pg
 
-
 WIDTH = 1600  # ゲームウィンドウの幅
 HEIGHT = 900  # ゲームウィンドウの高さ
-
 
 def check_bound(obj: pg.Rect) -> tuple[bool, bool]:
     """
@@ -266,6 +264,7 @@ class Enemy(pg.sprite.Sprite):
             self.state = "stop"
         self.rect.centery += self.vy
 
+
 class Boss(pg.sprite.Sprite):
     """
     ボスに関するクラス
@@ -305,18 +304,14 @@ class Boss_bomb(pg.sprite.Sprite):
     """
     ボスが投下する爆弾に関するクラス
     """
-
-
     def __init__(self, boss: "Boss", bird: Bird):
         """
         爆弾円Surfaceを生成する
         引数1 boss：爆弾を投下する敵機ボス
         引数2 bird：攻撃対象のこうかとん
         """
-
         super().__init__()
           # 爆弾円の半径：10以上50以下の乱数
-
         rads =random.randint(10,50)
         color = (0,0,1)  # 爆弾円の色：黒
         self.image = pg.Surface((2*rads, 2*rads))
@@ -339,19 +334,17 @@ class Boss_bomb(pg.sprite.Sprite):
             self.kill()
 
 
-
-
 class Gravity(pg.sprite.Sprite):
     """
     重力球を発生させるクラス
     """
-
     delta = {  # 押下キーと移動量の辞書
         pg.K_UP: (0, -1),
         pg.K_DOWN: (0, +1),
         pg.K_LEFT: (-1, 0),
         pg.K_RIGHT: (+1, 0),
     }
+
     def __init__(self,bird:Bird,life:int):
         """
         引数１：発生対象のこうかとんbird
@@ -375,19 +368,15 @@ class Gravity(pg.sprite.Sprite):
         こうかとんの移動に追従する
         """
         self.life -= 1
-    
         if self.life < 0:
             self.kill()
-
         sum_mv = [0, 0]
         for k, mv in __class__.delta.items():
             if key_lst[k]:
                 self.rect.move_ip(+self.speed*mv[0], +self.speed*mv[1])
                 sum_mv[0] += mv[0]
                 sum_mv[1] += mv[1]  
-
         screen.blit(self.image, self.rect)
-
 
 
 class Score:
@@ -410,7 +399,6 @@ class Score:
 
     def score_down(self,down):
         self.score -= down
-
 
     def update(self, screen: pg.Surface):
         self.image = self.font.render(f"Score: {self.score}", 0, self.color)
@@ -439,8 +427,6 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
-            
-            
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
             if (tmr+1)%1000==0:#ボスは1000ｆ後に出現
@@ -450,10 +436,6 @@ def main():
                 else:
                     break
                     
-
-
-                
-
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:   # 追加機能3
                 if (score.score > 100):
                     bird.change_state("hyper", 500)
@@ -483,18 +465,14 @@ def main():
             if bos.state == "stop" and tmr%bos.interval == 0:
                 # ボスが停止状態に入ったら，intervalに応じて爆弾投下
                 boss_bomb.add(Boss_bomb(bos, bird))
-
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.score_up(10)  # 10点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
-
         for bos in pg.sprite.groupcollide(boss_mv, beams, False, True).keys():
             exps.add(Explosion(bos, 100))  # 爆発エフェクト
             score.score_up(5)  # 5点アップ
             boss.damage(1)
-
-
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.score_up(1)  # 1点アップ
@@ -503,8 +481,6 @@ def main():
             score.score_up(1)  # 1点アップ
         for bomb in pg.sprite.groupcollide(boss_bomb, gravity, True, False).keys():#重力球とボスの爆弾の接触
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
-
-
 
         for bomb in pg.sprite.spritecollide(bird, bombs, True):
             if (bird.state == "hyper"): # hyperモードの時
@@ -521,7 +497,6 @@ def main():
             if (bird.state == "hyper"): # hyperモードの時
                 exps.add(Explosion(bomb, 50))   # 爆発エフェクト
                                                 # 加点はなし
-
             else:   # normalモードの時
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
@@ -529,13 +504,11 @@ def main():
                 time.sleep(2)
                 return
 
-
         if boss.boss_hp<=0:#ボスのＨＰが尽きたら喜びエフェクトを取り終了する
                 score.score_up(1000)
                 bird.change_img(6, screen)  # こうかとん喜びエフェクト
                 score.update(screen)
                 pg.display.update()
-
                 time.sleep(2)
                 return
 
@@ -552,8 +525,6 @@ def main():
         bombs.draw(screen)
         boss_bomb.update()
         boss_bomb.draw(screen)
-
-
         exps.update()
         exps.draw(screen)
         score.update(screen)
