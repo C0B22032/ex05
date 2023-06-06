@@ -71,7 +71,7 @@ class Bird(pg.sprite.Sprite):
         引数2 xy：こうかとん画像の位置座標タプル
         """
         super().__init__()
-        img0 = pg.transform.rotozoom(pg.image.load(f"ex04/fig/{num}.png"), 0, 2.0)
+        img0 = pg.transform.rotozoom(pg.image.load(f"ex05/fig/{num}.png"), 0, 2.0)
         img = pg.transform.flip(img0, True, False)  # デフォルトのこうかとん
         self.imgs = {
             (+1, 0): img,  # 右
@@ -97,7 +97,7 @@ class Bird(pg.sprite.Sprite):
         引数1 num：こうかとん画像ファイル名の番号
         引数2 screen：画面Surface
         """
-        self.image = pg.transform.rotozoom(pg.image.load(f"ex04/fig/{num}.png"), 0, 2.0)
+        self.image = pg.transform.rotozoom(pg.image.load(f"ex05/fig/{num}.png"), 0, 2.0)
         screen.blit(self.image, self.rect)
     
     def change_state(self, state: str, hyper_life: int):    # 追加機能3
@@ -198,7 +198,7 @@ class Beam(pg.sprite.Sprite):
         super().__init__()
         self.vx, self.vy = bird.get_direction()
         angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle0
-        self.image = pg.transform.rotozoom(pg.image.load(f"ex04/fig/beam.png"), angle, 2.0)
+        self.image = pg.transform.rotozoom(pg.image.load(f"ex05/fig/beam.png"), angle, 2.0)
         self.vx = math.cos(math.radians(angle))
         self.vy = -math.sin(math.radians(angle))
         self.rect = self.image.get_rect()
@@ -247,7 +247,7 @@ class Explosion(pg.sprite.Sprite):
         引数2 life：爆発時間
         """
         super().__init__()
-        img = pg.image.load("ex04/fig/explosion.gif")
+        img = pg.image.load("ex05/fig/explosion.gif")
         self.imgs = [img, pg.transform.flip(img, 1, 1)]
         self.image = self.imgs[0]
         self.rect = self.image.get_rect(center=obj.rect.center)
@@ -268,7 +268,7 @@ class Enemy(pg.sprite.Sprite):
     """
     敵機に関するクラス
     """
-    imgs = [pg.image.load(f"ex04/fig/alien{i}.png") for i in range(1, 4)]
+    imgs = [pg.image.load(f"ex05/fig/alien{i}.png") for i in range(1, 4)]
     
     def __init__(self):
         super().__init__()
@@ -297,7 +297,7 @@ class Boss(pg.sprite.Sprite):
     """
     ボスに関するクラス
     """
-    img = pg.transform.rotozoom(pg.image.load(f"ex04/fig/alien{1}.png"),0,5.0)#通常の敵の五倍の大きさ
+    img = pg.transform.rotozoom(pg.image.load(f"ex05/fig/alien{1}.png"),0,5.0)#通常の敵の五倍の大きさ
     
     def __init__(self):
         super().__init__()
@@ -517,7 +517,7 @@ def change_background(screen: pg.Surface, timer: Timer):
 def main():
     pg.display.set_caption("真！こうかとん無双・改")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
-    bg_img = pg.image.load("ex04/fig/pg_bg.jpg")
+    bg_img = pg.image.load("ex05/fig/pg_bg.jpg")
     score = Score()
     life = Life()
     gameover = Gameover()
