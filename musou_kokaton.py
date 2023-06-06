@@ -553,12 +553,11 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
                 b_beam.play()  # ビームSEの呼び出し
-            if (tmr+1)%1000==0:#ボスは1000ｆ後に出現
+            if (tmr)>=1000:#ボスは1000ｆ後に出現
                 if boss.flag ==0:#複数体出現するのを阻止
                     boss_mv.add(Boss())
                     boss.flag+=1
-                else:
-                    break
+
                     
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:   # 追加機能3
                 if (score.score > 100):
